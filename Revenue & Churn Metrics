@@ -1,0 +1,7 @@
+Goal: Developed a comprehensive dashboard to analyze SaaS metrics (MRR, Churn) and provide actionable insights for product management.
+Key Points: 
+     - SaaS Metrics: Visualized critical indicators including MRR, ARPPU, Churn Rate, and LTV.
+     - Factor Analysis: Performed deep-dive analysis on revenue changes, including expansion and contraction effects.
+     - Interactive Features: Integrated waterfall charts and dynamic filters to identify primary revenue drivers.
+Features: Integrated dynamic filters (date, language, age) and waterfall charts to identify primary drivers of revenue and user growth.
+Tools: SQL, Tableau.
