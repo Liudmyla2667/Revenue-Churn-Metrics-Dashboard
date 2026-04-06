@@ -5,3 +5,44 @@ Key Points:
      - Interactive Features: Integrated waterfall charts and dynamic filters to identify primary revenue drivers.
 Features: Integrated dynamic filters (date, language, age) and waterfall charts to identify primary drivers of revenue and user growth.
 Tools: SQL, Tableau.
+
+
+``` with montly_revenue as (
+	SELECT
+		 date(date_trunc('month', payment_date::timestamp)) as payment_month, user_id,
+		 sum(revenue_amount_usd) as total_revenue
+		from ads_analysis_goit_course.project.games_payments gp 
+		 group by payment_month, gp.user_id 
+		 ),
+settlement_months as (select *,
+	date(payment_month - interval '1' month) as previous_calendar_month,
+	date(payment_month + interval '1' month) as next_calendar_month,
+	lag(total_revenue) over (partition by user_id order by payment_month) as previous_paid_month_revenue,
+	lag(payment_month) over (partition by user_id order by payment_month) as previous_paid_month,
+	lead(payment_month) over (partition by user_id order by payment_month) as next_paid_month
+	from montly_revenue
+),
+mrr_classification as (select *,
+case when previous_paid_month is null
+	then total_revenue else 0 end as new_MRR,
+case when previous_paid_month is null 
+	then 1 else 0 end as new_paid_users,
+case when next_paid_month is null or next_paid_month!= next_calendar_month
+	then total_revenue else 0 end as churned_revenue,
+case when next_paid_month is null or next_paid_month!= next_calendar_month
+	then 1 else 0 end as churned_users,
+case when previous_paid_month = previous_calendar_month and total_revenue > previous_paid_month_revenue
+	then total_revenue - previous_paid_month_revenue else 0 end as expansion_revenue,
+case when previous_paid_month = previous_calendar_month and total_revenue < previous_paid_month_revenue
+	then total_revenue - previous_paid_month_revenue else 0 end as contraction_revenue
+	from settlement_months sm 
+)
+SELECT m.*, gpu.language, gpu.age, gpu.has_older_device_model as device, gpu.game_name
+FROM mrr_classification m
+left join ads_analysis_goit_course.project.games_paid_users gpu
+on m.user_id = gpu.user_id 
+ORDER BY m.user_id, m.payment_month;
+
+
+
+```
